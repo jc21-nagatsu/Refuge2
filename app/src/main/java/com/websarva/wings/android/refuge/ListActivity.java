@@ -1,6 +1,8 @@
 package com.websarva.wings.android.refuge;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,13 +15,8 @@ import java.util.Locale;
 
 public class ListActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
 
-    private static final String[] scenes = {
-             "東北電子専門学校"
-            , "桜丘小学校"
-            , "東六番丁小学校"
-            ,"台原小学校"
-            ,"市名坂小学校"
-            ,"広瀬小学校"};
+    int i = 0;
+    String[] scenes = {};
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,6 +24,32 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
 
         //ListViewのインスタンスを生成
         ListView listView = findViewById(R.id.list_view);
+
+        //
+        DatabaseHelper helper = new DatabaseHelper(ListActivity.this);
+        SQLiteDatabase db = helper.getWritableDatabase();
+        {
+            try {
+                String sqlInsert = "INSERT INTO shelter(shel_no,shel_name,latitube,longitube) " +
+                        "VALUES(000001,'桜丘小学校',38.3031001,140.849178)," +
+                        "(000002,'中山中学校',38.2964152,140.836555)," +
+                        "(000003,'中山小学校',38.2917773,140.8477392)," +
+                        "(000004,'北仙台中学校',38.2932744,140.8617912)," +
+                        "(000005,'台原小学校',38.2861882,140.8778506)";
+
+                String sql = "SELECT shel_name FROM shelter";
+                Cursor cursor = db.rawQuery(sql,null);
+                boolean next = cursor.moveToFirst();
+                while (next){
+                    scenes[i]  = cursor.getString(0);
+                    next = cursor.moveToNext();
+                    i++;
+                }
+            }
+            finally {
+                db.close();
+            }
+        }
 
         BaseAdapter adapter = new ListViewAdapter(this.getApplicationContext(),
                 R.layout.list, scenes);
@@ -38,6 +61,8 @@ public class ListActivity extends AppCompatActivity implements AdapterView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        DatabaseHelper helper = new DatabaseHelper(ListActivity.this);
+        SQLiteDatabase db = helper.getWritableDatabase();
         String selectedText = scenes[position];
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
